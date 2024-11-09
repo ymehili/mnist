@@ -5,3 +5,4 @@ import tensorflow as tf
 
 # Normalize the pixel values to [0, 1]
 img_train, img_test = img_train / 255.0, img_test / 255.0
+
