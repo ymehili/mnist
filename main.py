@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 # Load the dataset
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(img_train, result_train), (img_test, result_test) = tf.keras.datasets.mnist.load_data()
 
 # Normalize the pixel values to [0, 1]
-x_train, x_test = x_train / 255.0, x_test / 255.0
+img_train, img_test = img_train / 255.0, img_test / 255.0
