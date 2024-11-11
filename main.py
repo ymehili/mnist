@@ -14,40 +14,60 @@ def main():
     hidden_neurons2 = [Neuron([(random() % 100) / 100 for _ in range(16)], (random() % 100) / 100, sigmoid) for _ in range(16)]
     output_neurons = [Neuron([(random() % 100) / 100 for _ in range(16)], (random() % 100) / 100, sigmoid) for _ in range(10)]
     
-    for index, (img, result) in enumerate(zip(img_train, result_train)):
-        # Flatten the 28x28 image to a 784x1 vector
-        inputs = img.flatten()
+    epochs = 10
+    learning_rate = 0.01
 
-        # Activate the input layer
-        inputs = [neuron.activate(inputs) for neuron in input_neurons]
+    for epoch in range(epochs):
+        total_loss = 0
+        for index, (img, result) in enumerate(zip(img_train, result_train)):
+            inputs = img.flatten()
 
-        # Activate the first hidden layer
-        inputs = [neuron.activate(inputs) for neuron in hidden_neurons1]
+            # Forward pass
+            input_activations = [neuron.activate(inputs) for neuron in input_neurons]
+            hidden_activations1 = [neuron.activate(input_activations) for neuron in hidden_neurons1]
+            hidden_activations2 = [neuron.activate(hidden_activations1) for neuron in hidden_neurons2]
+            output_activations = [neuron.activate(hidden_activations2) for neuron in output_neurons]
 
-        # Activate the second hidden layer
-        inputs = [neuron.activate(inputs) for neuron in hidden_neurons2]
+            outputs = softmax(output_activations)
 
-        # Activate the output layer
-        inputs = [neuron.activate(inputs) for neuron in output_neurons]
+            label = [0] * 10
+            label[result] = 1
 
-        # Apply softmax to get the final output probabilities
-        outputs = softmax(inputs)
+            loss = cross_entropy_loss(outputs, label)
+            total_loss += loss
 
-        # Convert the result to a one-hot encoded vector
-        label = [0] * 10
-        label[result] = 1
+            # Backpropagation
+            # Compute output layer error
+            output_errors = [output - label for output, label in zip(outputs, label)]
 
-        # Calculate the cross-entropy loss
-        loss = cross_entropy_loss(outputs, label)
+            # Compute gradients for output layer
+            for i, neuron in enumerate(output_neurons):
+                for j in range(len(neuron.weights)):
+                    neuron.weights[j] -= learning_rate * output_errors[i] * hidden_activations2[j]
+                neuron.bias -= learning_rate * output_errors[i]
 
-        max_output = max(outputs)
-        max_index = outputs.index(max_output)
+            # Compute hidden layer 2 error
+            hidden_errors2 = [sum(output_errors[k] * output_neurons[k].weights[i] for k in range(len(output_neurons))) for i in range(len(hidden_neurons2))]
 
-        print(f"Max output: {max_output}, Index: {max_index}, Loss: {loss}")
-        
-        if index == 10:
-            break
-    return
+            # Compute gradients for hidden layer 2
+            for i, neuron in enumerate(hidden_neurons2):
+                for j in range(len(neuron.weights)):
+                    neuron.weights[j] -= learning_rate * hidden_errors2[i] * hidden_activations1[j]
+                neuron.bias -= learning_rate * hidden_errors2[i]
+
+            # Compute hidden layer 1 error
+            hidden_errors1 = [sum(hidden_errors2[k] * hidden_neurons2[k].weights[i] for k in range(len(hidden_neurons2))) for i in range(len(hidden_neurons1))]
+
+            # Compute gradients for hidden layer 1
+            for i, neuron in enumerate(hidden_neurons1):
+                for j in range(len(neuron.weights)):
+                    neuron.weights[j] -= learning_rate * hidden_errors1[i] * input_activations[j]
+                neuron.bias -= learning_rate * hidden_errors1[i]
+
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {total_loss / len(img_train)}")
+
+    # Evaluate the model on the test dataset (to be implemented)
+    # ...
 
 if __name__ == "__main__":
     main()
