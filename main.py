@@ -9,9 +9,9 @@ from neuron import *
 img_train, img_test = img_train / 255.0, img_test / 255.0
 
 def main():
-    input_neurons = [Neuron([(random() % 100) / 100], (random() % 100) / 100, sigmoid) for _ in range(784)]
-    hidden_neurons1 = [Neuron([(random() % 100) / 100 for _ in range(784)], (random() % 100) / 100, sigmoid) for _ in range(16)]
-    hidden_neurons2 = [Neuron([(random() % 100) / 100 for _ in range(16)], (random() % 100) / 100, sigmoid) for _ in range(16)]
+    input_neurons = [Neuron([(random() % 100) / 100], (random() % 100) / 100, relu) for _ in range(784)]
+    hidden_neurons1 = [Neuron([(random() % 100) / 100 for _ in range(784)], (random() % 100) / 100, relu) for _ in range(16)]
+    hidden_neurons2 = [Neuron([(random() % 100) / 100 for _ in range(16)], (random() % 100) / 100, relu) for _ in range(16)]
     output_neurons = [Neuron([(random() % 100) / 100 for _ in range(16)], (random() % 100) / 100, sigmoid) for _ in range(10)]
     
     epochs = 10
@@ -43,26 +43,20 @@ def main():
             # Backpropagation
             # Calculate output layer gradients
             output_deltas = [(output - label[i]) for i, output in enumerate(outputs)]
-
-            # Update output layer weights and biases
             for i, neuron in enumerate(output_neurons):
                 for j in range(len(neuron.weights)):
                     neuron.weights[j] -= learning_rate * output_deltas[i] * hidden2_outputs[j]
                 neuron.bias -= learning_rate * output_deltas[i]
 
             # Calculate hidden layer 2 gradients
-            hidden2_deltas = [sum(output_deltas[k] * output_neurons[k].weights[i] for k in range(len(output_neurons))) * sigmoid(hidden2_outputs[i]) * (1 - sigmoid(hidden2_outputs[i])) for i in range(len(hidden_neurons2))]
-
-            # Update hidden layer 2 weights and biases
+            hidden2_deltas = [sum(output_deltas[k] * output_neurons[k].weights[i] for k in range(len(output_neurons))) * relu(hidden2_outputs[i]) * (1 - relu(hidden2_outputs[i])) for i in range(len(hidden_neurons2))]
             for i, neuron in enumerate(hidden_neurons2):
                 for j in range(len(neuron.weights)):
                     neuron.weights[j] -= learning_rate * hidden2_deltas[i] * hidden1_outputs[j]
                 neuron.bias -= learning_rate * hidden2_deltas[i]
 
             # Calculate hidden layer 1 gradients
-            hidden1_deltas = [sum(hidden2_deltas[k] * hidden_neurons2[k].weights[i] for k in range(len(hidden_neurons2))) * sigmoid(hidden1_outputs[i]) * (1 - sigmoid(hidden1_outputs[i])) for i in range(len(hidden_neurons1))]
-
-            # Update hidden layer 1 weights and biases
+            hidden1_deltas = [sum(hidden2_deltas[k] * hidden_neurons2[k].weights[i] for k in range(len(hidden_neurons2))) * relu(hidden1_outputs[i]) * (1 - relu(hidden1_outputs[i])) for i in range(len(hidden_neurons1))]
             for i, neuron in enumerate(hidden_neurons1):
                 for j in range(len(neuron.weights)):
                     neuron.weights[j] -= learning_rate * hidden1_deltas[i] * inputs[j]
@@ -81,7 +75,6 @@ def main():
         outputs = softmax(outputs)
         if outputs.index(max(outputs)) == result:
             correct_predictions += 1
-
     accuracy = correct_predictions / len(img_test)
     print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
