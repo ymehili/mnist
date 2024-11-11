@@ -34,3 +34,10 @@ def softmax(z: List[float]) -> List[float]:
     exp_values = [math.exp(i) for i in z]
     total = sum(exp_values)
     return [i / total for i in exp_values]
+
+
+def cross_entropy_loss(predictions: List[float], labels: List[float]) -> float:
+    # Ensure predictions are not exactly 0 or 1 to avoid log(0)
+    epsilon = 1e-12
+    predictions = [max(min(p, 1 - epsilon), epsilon) for p in predictions]
+    return -sum(label * math.log(pred) for label, pred in zip(labels, predictions))
